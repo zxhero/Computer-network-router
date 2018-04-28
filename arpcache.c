@@ -3,6 +3,7 @@
 #include "ether.h"
 #include "packet.h"
 #include "icmp.h"
+#include "ip.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,9 +57,12 @@ int arpcache_lookup(u32 ip4, u8 mac[ETH_ALEN])
 	fprintf(stderr, "TODO: lookup ip address in arp cache.\n");
 	int i;
 	pthread_mutex_lock(&arpcache.lock);
+	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(ip4));
 	for(i = 0;i < MAX_ARP_SIZE;i++){
+	
         if(arpcache.entries[i].ip4 == ip4 && arpcache.entries[i].valid == 1){
-            memcpy(mac,arpcache.entries[i].mac);
+		//fprintf(stderr, "TODO: I find address in arp cache.\n");
+            memcpy(mac,arpcache.entries[i].mac,ETH_ALEN);
             pthread_mutex_unlock(&arpcache.lock);
             return 1;
         }
@@ -82,10 +86,10 @@ void arpcache_append_packet(iface_info_t *iface, u32 ip4, char *packet, int len)
 	pthread_mutex_lock(&arpcache.lock);
 	struct arp_req *arp_entry = NULL;
 	struct cached_pkt *pkt_ptr = NULL;
-	int flag == 0;
+	int flag = 0;
 	list_for_each_entry(arp_entry,&arpcache.req_list,list){
         if(arp_entry->ip4 == ip4 && arp_entry->iface == iface){
-            flag == 1;
+            flag = 1;
             break;
         }
 	}
@@ -116,33 +120,39 @@ void arpcache_insert(u32 ip4, u8 mac[ETH_ALEN])
 	fprintf(stderr, "TODO: insert ip->mac entry, and send all the pending packets.\n");
 	pthread_mutex_lock(&arpcache.lock);
 	struct cached_pkt *pkt_ptr = NULL,*pkt_nptr;
-	int flag = 0,i ;
-	struct arp_req *arp_entry = NULL;
+	int i ;
+	struct arp_req *arp_entry = NULL,*arp_nentry;
 	struct ether_header *eh;
 	for(i = 0;i < MAX_ARP_SIZE;i++){
             if(arpcache.entries[i].valid == 0){
                 arpcache.entries[i].ip4 = ip4;
+		fprintf(stderr, IP_FMT,LE_IP_FMT_STR(ip4));
                 memcpy(arpcache.entries[i].mac,mac,ETH_ALEN);
                 arpcache.entries[i].valid = 1;
                 arpcache.entries[i].added = time(NULL);
                 break;
             }
 	}
-	list_for_each_entry(arp_entry,&arpcache.req_list,list){
+	list_for_each_entry_safe(arp_entry,arp_nentry,&arpcache.req_list,list){
         if(arp_entry->ip4 == ip4){
             list_for_each_entry_safe(pkt_ptr,pkt_nptr,&arp_entry->cached_packets,list){
                 eh = (struct ether_header *)(pkt_ptr->packet);
                 memcpy(eh->ether_dhost, mac, ETH_ALEN);
                 iface_send_packet(arp_entry->iface, pkt_ptr->packet, pkt_ptr->len);
                 list_delete_entry(&(pkt_ptr->list));
-                free(pkt_ptr->packet);
+		fprintf(stderr, "TODO: 1.\n");
+                //free(pkt_ptr->packet);
+		fprintf(stderr, "TODO: 2.\n");
                 free(pkt_ptr);
             }
+		fprintf(stderr, "TODO: 2.\n");
             list_delete_entry(&(arp_entry->list));
+		fprintf(stderr, "TODO: 3.\n");
             free(arp_entry);
             break;
         }
 	}
+	fprintf(stderr, "TODO: 4.\n");
 	pthread_mutex_unlock(&arpcache.lock);
 }
 

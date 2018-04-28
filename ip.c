@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ip.h"
 #include "icmp.h"
 #include "packet.h"
@@ -35,8 +36,14 @@ rt_entry_t *longest_prefix_match(u32 dst)
 	rt_entry_t *entry = NULL;
 	u32 net;
 	list_for_each_entry(entry, &rtable, list){
-        net = entry->dest & entry->mask;
-        if(dst & entry->mask == net && entry->mask > max_mask){
+// initialize ip header""
+	net = entry->dest & entry->mask;
+	
+        if((dst & entry->mask) == net && entry->mask > max_mask){
+	fprintf(stderr, "mask:");
+		fprintf(stderr, IP_FMT,LE_IP_FMT_STR(entry->mask));
+	fprintf(stderr, "net:");
+	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(net));
             the_entry = entry;
             max_mask = entry->mask;
         }
@@ -52,7 +59,6 @@ void ip_forward_packet(u32 ip_dst, char *packet, int len)
 {
 	fprintf(stderr, "TODO: forward ip packet.\n");
 	struct iphdr *ip = packet_to_ip_hdr(packet);
-	u8  ttl;
 	rt_entry_t *entry = longest_prefix_match(ip_dst);
 	if(!entry){
         int icmp_len = ETHER_HDR_SIZE + 2 *IP_HDR_SIZE(ip) + 2*ICMP_COPIED_DATA_LEN;
@@ -68,10 +74,10 @@ void ip_forward_packet(u32 ip_dst, char *packet, int len)
             icmp_send_packet(icmp_packet,icmp_len,ICMP_TIME_EXCEEDED,0);
         }
         else{
-            ip->ttl = ip->ttl--;
+            ip->ttl = (ip->ttl)--;
             ip->checksum = ip_checksum(ip);
             u32 next_hop = entry->gw;
-            if (!next_hop)
+            //if (!next_hop)
                 next_hop = ip_dst;
 
             struct ether_header *eh = (struct ether_header *)packet;
@@ -93,8 +99,10 @@ void handle_ip_packet(iface_info_t *iface, char *packet, int len)
 
     struct iphdr *ip_hdr = packet_to_ip_hdr(packet);
     u32 dst = ntohl(ip_hdr->daddr);
+	u32 src = ntohl(ip_hdr->saddr);
 	if(ip_hdr->protocol == IPPROTO_ICMP && dst == iface->ip){
         ip_init_hdr(ip_hdr,iface->ip,ntohl(ip_hdr->saddr),len-ETHER_HDR_SIZE,IPPROTO_ICMP);
+	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(src));
         icmp_send_packet(packet, len, 0, 0);
 	}
 	else{
@@ -119,11 +127,12 @@ void ip_send_packet(char *packet, int len)
 	}
 
 	u32 next_hop = entry->gw;
-	if (!next_hop)
+	//if (!next_hop)
 		next_hop = dst;
-
+	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(dst));
+	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(next_hop));
 	struct ether_header *eh = (struct ether_header *)packet;
-	eh->ether_type = ntohs(ETH_P_IP);
+	eh->ether_type = htons(ETH_P_IP);
 	memcpy(eh->ether_shost, entry->iface->mac, ETH_ALEN);
 
 	iface_send_packet_by_arp(entry->iface, next_hop, packet, len);

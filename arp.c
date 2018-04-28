@@ -65,7 +65,8 @@ void handle_arp_packet(iface_info_t *iface, char *packet, int len)
 	fprintf(stderr, "TODO: process arp packet: arp request & arp reply.\n");
 	struct ether_arp *arp_hdr = (struct ether_arp *)(packet + ETHER_HDR_SIZE);
 	if(ntohs(arp_hdr->arp_op) == ARPOP_REQUEST && ntohl(arp_hdr->arp_tpa) == iface->ip){
-        arp_send_reply(iface,arp_hdr);
+	arpcache_insert(ntohl(arp_hdr->arp_spa),arp_hdr->arp_sha);        
+	arp_send_reply(iface,arp_hdr);
 	}
 	else if(ntohs(arp_hdr->arp_op) == ARPOP_REPLY){
         arpcache_insert(ntohl(arp_hdr->arp_spa),arp_hdr->arp_sha);

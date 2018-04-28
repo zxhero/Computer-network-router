@@ -10,7 +10,6 @@
 
 #include <netinet/in.h>
 
-#define DEFAULT_TTL 15
  #define IPPROTO_ICMP		1	// ICMP (Internet Control Message Protocol)
 // #define IPPROTO_TCP		6	// TCP (Transport Control Protocol)
 // #define IPPROTO_UDP		17	// UDP (User Datagram Protocol)
@@ -41,7 +40,7 @@ struct iphdr {
 #define IP_HDR_SIZE(hdr) (hdr->ihl * 4)
 #define IP_DATA(hdr)	((char *)hdr + IP_HDR_SIZE(hdr))
 
-#define IP_FMT	"%hhu.%hhu.%hhu.%hhu"
+#define IP_FMT	"%hhu.%hhu.%hhu.%hhu\n"
 #define LE_IP_FMT_STR(ip) ((u8 *)&(ip))[3], \
 						  ((u8 *)&(ip))[2], \
  						  ((u8 *)&(ip))[1], \
