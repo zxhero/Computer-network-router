@@ -52,17 +52,19 @@ void arpcache_destroy()
 //
 // traverse the hash table to find whether there is an entry with the same IP
 // and mac address with the given arguments
-int arpcache_lookup(u32 ip4, u8 mac[ETH_ALEN])
+int arpcache_lookup(u32 ip4, u8 *mac)
 {
 	fprintf(stderr, "TODO: lookup ip address in arp cache.\n");
-	int i;
+	int i,j;
 	pthread_mutex_lock(&arpcache.lock);
 	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(ip4));
 	for(i = 0;i < MAX_ARP_SIZE;i++){
 	
-        if(arpcache.entries[i].ip4 == ip4 && arpcache.entries[i].valid == 1){
+        if(arpcache.entries[i].valid == 1 && arpcache.entries[i].ip4 == ip4){
 		//fprintf(stderr, "TODO: I find address in arp cache.\n");
-            memcpy(mac,arpcache.entries[i].mac,ETH_ALEN);
+		fprintf(stderr, "%d\n",i);
+            //memcpy(mac,arpcache.entries[i].mac,ETH_ALEN);
+		for(j =0; j < ETH_ALEN;j++)	mac[j] = arpcache.entries[i].mac[j];
             pthread_mutex_unlock(&arpcache.lock);
             return 1;
         }
@@ -177,6 +179,7 @@ void *arpcache_sweep(void *arg)
 		for(i = 0;i < MAX_ARP_SIZE;i++){
             if(arpcache.entries[i].valid == 1 && (sec - arpcache.entries[i].added) > 15){
                 arpcache.entries[i].valid = 0;
+		fprintf(stderr,"old ip: %d\n",arpcache.entries[i].ip4);
             }
         }
         list_for_each_entry_safe(arp_entry,arp_nentry,&arpcache.req_list,list){
@@ -184,9 +187,11 @@ void *arpcache_sweep(void *arg)
                 if(arp_entry->retries == 5){
                     struct cached_pkt *pkt_ptr = NULL,*pkt_nptr;
                     list_for_each_entry_safe(pkt_ptr,pkt_nptr,&arp_entry->cached_packets,list){
+			pthread_mutex_unlock(&arpcache.lock);
                         icmp_send_packet(pkt_ptr->packet,pkt_ptr->len,ICMP_DEST_UNREACH,1);
+			pthread_mutex_lock(&arpcache.lock);
                         list_delete_entry(&(pkt_ptr->list));
-                        free(pkt_ptr->packet);
+                        //free(pkt_ptr->packet);
                         free(pkt_ptr);
                     }
                     list_delete_entry(&(arp_entry->list));

@@ -4,6 +4,7 @@
 #include "packet.h"
 #include "ether.h"
 #include "arpcache.h"
+#include "ip.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,8 +89,12 @@ void iface_send_packet_by_arp(iface_info_t *iface, u32 dst_ip, char *packet, int
 	int found = arpcache_lookup(dst_ip, dst_mac);
 	if (found) {
 		// log(DEBUG, "found the mac of %x, send this packet", dst_ip);
+		fprintf(stderr, "FIND :");
+		
 		memcpy(eh->ether_dhost, dst_mac, ETH_ALEN);
+		fprintf(stderr, IP_FMT,LE_IP_FMT_STR(dst_ip));
 		iface_send_packet(iface, packet, len);
+		//fprintf(stderr, IP_FMT,LE_IP_FMT_STR(dst_ip));
 	}
 	else {
 		// log(DEBUG, "lookup %x failed, pend this packet", dst_ip);
