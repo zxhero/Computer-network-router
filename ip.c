@@ -77,7 +77,7 @@ void ip_forward_packet(u32 ip_dst, char *packet, int len)
             ip->ttl = (ip->ttl)--;
             ip->checksum = ip_checksum(ip);
             u32 next_hop = entry->gw;
-            //if (!next_hop)
+            if (!next_hop)
                 next_hop = ip_dst;
 
             struct ether_header *eh = (struct ether_header *)packet;
@@ -127,7 +127,7 @@ void ip_send_packet(char *packet, int len)
 	}
 
 	u32 next_hop = entry->gw;
-	//if (!next_hop)
+	if (!next_hop)
 		next_hop = dst;
 	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(dst));
 	fprintf(stderr, IP_FMT,LE_IP_FMT_STR(next_hop));
