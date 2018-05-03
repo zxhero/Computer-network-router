@@ -134,6 +134,6 @@ void ip_send_packet(char *packet, int len)
 	struct ether_header *eh = (struct ether_header *)packet;
 	eh->ether_type = htons(ETH_P_IP);
 	memcpy(eh->ether_shost, entry->iface->mac, ETH_ALEN);
-
+	//ip->saddr = htonl(entry->iface->ip);
 	iface_send_packet_by_arp(entry->iface, next_hop, packet, len);
 }

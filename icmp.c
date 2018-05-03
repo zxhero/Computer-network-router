@@ -14,6 +14,7 @@ void icmp_send_packet(const char *in_pkt, int len, u8 type, u8 code)
 	fprintf(stderr, "TODO: malloc and send icmp packet.\n");
 	struct iphdr *ip_hdr = packet_to_ip_hdr(in_pkt);
 	u32 dst = ntohl(ip_hdr->daddr);
+	len = ETHER_HDR_SIZE + IP_BASE_HDR_SIZE + 16 + IP_BASE_HDR_SIZE;
 	struct icmphdr *icmp = (struct icmphdr *)IP_DATA(ip_hdr);
         if(type == ICMP_ECHOREPLY && code == 0){
             ;
