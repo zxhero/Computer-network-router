@@ -61,10 +61,10 @@ void ip_forward_packet(u32 ip_dst, char *packet, int len)
 	struct iphdr *ip = packet_to_ip_hdr(packet);
 	rt_entry_t *entry = longest_prefix_match(ip_dst);
 	if(!entry){
-        int icmp_len = ETHER_HDR_SIZE + 2 *IP_HDR_SIZE(ip) + 2*ICMP_COPIED_DATA_LEN;
-        char *icmp_packet = malloc(icmp_len);
-        memcpy(icmp_packet,packet,ETHER_HDR_SIZE + IP_HDR_SIZE(ip) + ICMP_COPIED_DATA_LEN);
-        icmp_send_packet(icmp_packet,icmp_len,ICMP_DEST_UNREACH,0);
+        //int icmp_len = ETHER_HDR_SIZE + 2 *IP_HDR_SIZE(ip) + 2*ICMP_COPIED_DATA_LEN;
+        //char *icmp_packet = malloc(icmp_len);
+        //memcpy(icmp_packet,packet,ETHER_HDR_SIZE + IP_HDR_SIZE(ip) + ICMP_COPIED_DATA_LEN);
+        icmp_send_packet(packet,len,ICMP_DEST_UNREACH,ICMP_NET_UNREACH);
 	}
 	else{
         if(ip->ttl == 0){
